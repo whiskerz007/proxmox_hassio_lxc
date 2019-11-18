@@ -136,7 +136,7 @@ EOF
 # Add access to ttyACM,ttyS,ttyUSB,net/tun devices
 cat <<'EOF' >> $LXC_CONFIG
 lxc.autodev: 1
-lxc.hook.autodev: bash -c 'mkdir -p ${LXC_ROOTFS_MOUNT}/dev/bus/usb; cp -dR /dev/bus/usb ${LXC_ROOTFS_MOUNT}/dev/bus; for dev in $(ls /dev/tty{ACM,S,USB}* 2>/dev/null) /dev/mem /dev/net/tun; do mkdir -p $(dirname ${LXC_ROOTFS_MOUNT}${dev}); for link in $(udevadm info --query=property $dev | sed -n "s/DEVLINKS=//p"); do mkdir -p ${LXC_ROOTFS_MOUNT}$(dirname $link); cp -dR $link ${LXC_ROOTFS_MOUNT}${link}; done; cp -dR $dev ${LXC_ROOTFS_MOUNT}${dev}; done'
+lxc.hook.autodev: bash -c 'for dev in $(ls /dev/tty{ACM,S,USB}* 2>/dev/null) $([ -d "/dev/bus" ] && find /dev/bus -type c) /dev/mem /dev/net/tun; do mkdir -p $(dirname ${LXC_ROOTFS_MOUNT}${dev}); for link in $(udevadm info --query=property $dev | sed -n "s/DEVLINKS=//p"); do mkdir -p ${LXC_ROOTFS_MOUNT}$(dirname $link); cp -dR $link ${LXC_ROOTFS_MOUNT}${link}; done; cp -dR $dev ${LXC_ROOTFS_MOUNT}${dev}; done'
 EOF
 
 # Setup container for Hass.io
