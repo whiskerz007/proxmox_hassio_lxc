@@ -141,7 +141,9 @@ EOF
 
 # Setup container for Hass.io
 msg "Starting LXC container..."
+TZ=$(timedatectl | sed -n '/Time zone/ s/^.*: //p' | awk '{print $1}')
 pct start $CTID
+pct exec $CTID timedatectl set-timezone $TZ
 pct push $CTID setup.sh /setup.sh -perms 755
 pct exec $CTID -- bash -c "/setup.sh"
 
