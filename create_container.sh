@@ -29,6 +29,9 @@ function msg() {
   echo -e "$TEXT"
 }
 function cleanup_failed() {
+  if [ ! -z ${MOUNT+x} ]; then
+    pct unmount $CTID
+  fi
   if $(pct status $CTID &>/dev/null); then
     if [ "$(pct status $CTID | awk '{print $2}')" == "running" ]; then
       pct stop $CTID
@@ -139,11 +142,14 @@ lxc.autodev: 1
 lxc.hook.autodev: bash -c 'for dev in $(ls /dev/tty{ACM,S,USB}* 2>/dev/null) $([ -d "/dev/bus" ] && find /dev/bus -type c) /dev/mem /dev/net/tun; do mkdir -p $(dirname ${LXC_ROOTFS_MOUNT}${dev}); for link in $(udevadm info --query=property $dev | sed -n "s/DEVLINKS=//p"); do mkdir -p ${LXC_ROOTFS_MOUNT}$(dirname $link); cp -dR $link ${LXC_ROOTFS_MOUNT}${link}; done; cp -dR $dev ${LXC_ROOTFS_MOUNT}${dev}; done'
 EOF
 
+# Set container timezone to match host
+MOUNT=$(pct mount $CTID | cut -d"'" -f 2)
+ln -fs $(readlink /etc/localtime) ${MOUNT}/etc/localtime
+pct unmount $CTID && unset MOUNT
+
 # Setup container for Hass.io
 msg "Starting LXC container..."
-TZ=$(timedatectl | sed -n '/Time zone/ s/^.*: //p' | awk '{print $1}')
 pct start $CTID
-pct exec $CTID timedatectl set-timezone $TZ
 pct push $CTID setup.sh /setup.sh -perms 755
 pct exec $CTID -- bash -c "/setup.sh"
 
