@@ -119,8 +119,10 @@ ROOTFS=${STORAGE}:${DISK_REF-}${DISK}
 # Create LXC
 msg "Creating LXC container..."
 pvesm alloc $STORAGE $CTID $DISK 4G --format ${DISK_FORMAT:-raw} >/dev/null
-if [ "$STORAGE_TYPE" != "zfspool" ]; then
-  mke2fs $(pvesm path $ROOTFS) &>/dev/null
+if [ "$STORAGE_TYPE" == "zfspool" ]; then
+  warn "Some addons may not work due to ZFS not supporting 'fallocate'."
+else
+  mkfs.ext4 $(pvesm path $ROOTFS) &>/dev/null
 fi
 ARCH=$(dpkg --print-architecture)
 HOSTNAME=hassio
