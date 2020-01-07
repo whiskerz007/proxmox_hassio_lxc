@@ -59,6 +59,27 @@ WantedBy=multi-user.target
 EOF
 ln -s /etc/systemd/system/{hassio-fix-btime.service,hassio-supervisor.service.wants/}
 
+# Install hassio-cli
+msg "Installing hassio-cli..."
+docker pull homeassistant/amd64-hassio-cli >/dev/null
+ARCH=$(dpkg --print-architecture)
+HASSIO_CLI_PATH=/usr/sbin/hassio-cli
+cat << EOF > $HASSIO_CLI_PATH
+#!/bin/bash
+set -o errexit
+
+HASSIO_TOKEN=\$(jq --raw-output '.access_token' /usr/share/hassio/homeassistant.json)
+
+docker container run --rm -it --init \
+  --security-opt apparmor="docker-default" \
+  -e HASSIO_TOKEN=\${HASSIO_TOKEN} \
+  --network=hassio \
+  --add-host hassio:172.30.32.2 \
+  homeassistant/${ARCH}-hassio-cli \
+  /bin/bash -c "sed -i '/HASSIO_TOKEN/ s/^/#/' /bin/cli.sh; /bin/cli.sh"
+EOF
+chmod +x $HASSIO_CLI_PATH
+
 # Cleanup container
 msg "Cleanup..."
 rm -rf /setup.sh /var/{cache,log}/* /var/lib/apt/lists/*
