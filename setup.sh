@@ -12,6 +12,11 @@ function error_exit() {
   msg "$FLAG $REASON"
   exit $EXIT
 }
+function warn() {
+  local REASON="\e[97m$1\e[39m"
+  local FLAG="\e[93m[WARNING]\e[39m"
+  msg "$FLAG $REASON"
+}
 function msg() {
   local TEXT="$1"
   echo -e "$TEXT"
@@ -28,6 +33,16 @@ apt-get autoremove >/dev/null
 msg "Updating container OS..."
 apt-get update >/dev/null
 apt-get -qqy upgrade &>/dev/null
+
+# Verify valid network settings
+while [ "$(hostname -I)" = "" ]; do
+    COUNT=$(($COUNT + 1))
+    warn "Failed to grab an IP address (attempt $COUNT)..."
+    if [ $COUNT -eq 10 ]; then
+        die "Unable to retrieve assigned IP address (failed DHCP)."
+    fi
+    sleep 1
+done
 
 # Install prerequisites
 msg "Installing prerequisites..."
