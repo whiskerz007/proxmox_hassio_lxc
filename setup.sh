@@ -38,6 +38,20 @@ apt-get -qqy install \
 msg "Installing Docker..."
 sh <(curl -sSL https://get.docker.com) &>/dev/null
 
+# Customize Docker configuration
+msg "Customizing Docker..."
+# Set limit to Docker container log size
+cat >/etc/docker/daemon.json <<'EOF'
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3" 
+  }
+}
+EOF
+systemctl restart docker
+
 # Install Hass.io
 msg "Installing Hass.io..."
 bash <(curl -sL https://github.com/home-assistant/hassio-installer/raw/master/hassio_install.sh) &>/dev/null
