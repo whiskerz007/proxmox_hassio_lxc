@@ -67,21 +67,23 @@ load_module aufs
 load_module overlay
 
 # Select storage location
-STORAGE_LIST=( $(pvesm status -content rootdir | awk 'NR>1 {print $1}') )
-if [ ${#STORAGE_LIST[@]} -eq 0 ]; then
+while read -r line; do
+  tag=$(echo $line | awk '{print $1}')
+  type=$(echo $line | awk '{printf "%-10s", $2}')
+  free=$(echo $line | numfmt --field 4-6 --from-unit=K --to=iec --format %.2f | awk '{printf( "%9sB", $6)}')
+  item="  Type: $type Free: $free"
+  STORAGE_MENU+=( "$tag" "$item" "OFF")
+done < <(pvesm status -content rootdir | awk 'NR>1')
+if [ $((${#STORAGE_MENU[@]}/3)) -eq 0 ]; then
   warn "'Container' needs to be selected for at least one storage location."
   die "Unable to detect valid storage location."
-elif [ ${#STORAGE_LIST[@]} -eq 1 ]; then
-  STORAGE=${STORAGE_LIST[0]}
+elif [ $((${#STORAGE_MENU[@]}/3)) -eq 1 ]; then
+  STORAGE=${STORAGE_MENU[0]}
 else
-  msg "\n\nMore than one storage locations detected.\n"
-  PS3=$'\n'"Which storage location would you like to use? "
-  select s in "${STORAGE_LIST[@]}"; do
-    if [[ " ${STORAGE_LIST[@]} " =~ " ${s} " ]]; then
-      STORAGE=$s
-      break
-    fi
-    echo -en "\e[1A\e[K\e[1A"
+  while [ -z "${STORAGE:+x}" ]; do
+    STORAGE=$(whiptail --title "Storage Pools" --radiolist \
+    "Which storage pool you would like to use for the container?\n\n" 16 70 6 \
+    "${STORAGE_MENU[@]}" 3>&1 1>&2 2>&3) || exit
   done
 fi
 info "Using '$STORAGE' for storage location."
