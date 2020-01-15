@@ -155,7 +155,7 @@ pct unmount $CTID && unset MOUNT
 msg "Starting LXC container..."
 pct start $CTID
 pct push $CTID setup.sh /setup.sh -perms 755
-pct exec $CTID -- bash -c "/setup.sh"
+pct exec $CTID /setup.sh
 
 # Get network details and show completion message
 IP=$(pct exec $CTID ip a s dev eth0 | sed -n '/inet / s/\// /p' | awk '{print $2}')
