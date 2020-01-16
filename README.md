@@ -12,8 +12,6 @@ To create a new LXC container on Proxmox and setup Hass.io to run inside of it, 
 bash -c "$(wget -qLO - https://github.com/whiskerz007/proxmox_hassio_lxc/raw/master/create_container.sh)"
 ```
 
-***Note:*** _Currently Proxmox LXCs are not persisting their MAC addresses. To maintain a predictable IP address, the only solution is to set the LXC network interface to use a static IP address._
-
 ## Default console login credentials
 
 ```
