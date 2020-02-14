@@ -12,6 +12,14 @@ To create a new LXC container on Proxmox and setup Hass.io to run inside of it, 
 bash -c "$(wget -qLO - https://github.com/whiskerz007/proxmox_hassio_lxc/raw/master/create_container.sh)"
 ```
 
+## Copy Home Assistant data between containers
+
+To ease the process of updating the LXC configuration, a script has been provided. To copy Home Assistant data from one container to another, run the following in a SSH connection or the Proxmox web shell.
+
+```
+bash -c "$(wget -qLO - https://github.com/whiskerz007/proxmox_hassio_lxc/raw/master/copy_data.sh)"
+```
+
 ## Known limitations
 
 - Unable to use bluetooth devices due to the limitation of LXC
