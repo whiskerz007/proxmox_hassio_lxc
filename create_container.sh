@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
 
-set -Eeuo pipefail
+# Setup script environment
+set -o errexit  #Exit immediately if a pipeline returns a non-zero status
+set -o errtrace #Trap ERR from shell functions, command substitutions, and commands from subshell
+set -o nounset  #Treat unset variables as an error
+set -o pipefail #Pipe will exit with last non-zero status if applicable
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
 trap cleanup EXIT
+
 function error_exit() {
   trap - ERR
   local DEFAULT='Unknown failure occured.'
   local REASON="\e[97m${1:-$DEFAULT}\e[39m"
   local FLAG="\e[91m[ERROR] \e[93m$EXIT@$LINE"
   msg "$FLAG $REASON"
-  [ ! -z ${CTID-} ] && cleanup_failed
+  [ ! -z ${CTID-} ] && cleanup_ctid
   exit $EXIT
 }
 function warn() {
@@ -28,7 +33,7 @@ function msg() {
   local TEXT="$1"
   echo -e "$TEXT"
 }
-function cleanup_failed() {
+function cleanup_ctid() {
   if [ ! -z ${MOUNT+x} ]; then
     pct unmount $CTID
   fi
@@ -68,11 +73,11 @@ load_module overlay
 
 # Select storage location
 while read -r line; do
-  tag=$(echo $line | awk '{print $1}')
-  type=$(echo $line | awk '{printf "%-10s", $2}')
-  free=$(echo $line | numfmt --field 4-6 --from-unit=K --to=iec --format %.2f | awk '{printf( "%9sB", $6)}')
-  item="  Type: $type Free: $free"
-  STORAGE_MENU+=( "$tag" "$item" "OFF")
+  TAG=$(echo $line | awk '{print $1}')
+  TYPE=$(echo $line | awk '{printf "%-10s", $2}')
+  FREE=$(echo $line | numfmt --field 4-6 --from-unit=K --to=iec --format %.2f | awk '{printf( "%9sB", $6)}')
+  ITEM="  Type: $TYPE Free: $FREE"
+  STORAGE_MENU+=( "$TAG" "$ITEM" "OFF" )
 done < <(pvesm status -content rootdir | awk 'NR>1')
 if [ $((${#STORAGE_MENU[@]}/3)) -eq 0 ]; then
   warn "'Container' needs to be selected for at least one storage location."
