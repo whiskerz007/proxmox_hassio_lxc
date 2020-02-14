@@ -12,6 +12,11 @@ To create a new LXC container on Proxmox and setup Hass.io to run inside of it, 
 bash -c "$(wget -qLO - https://github.com/whiskerz007/proxmox_hassio_lxc/raw/master/create_container.sh)"
 ```
 
+## Known limitations
+
+- Unable to use bluetooth devices due to the limitation of LXC
+- Setting up container on a ZFS pool will cause issues with addons that use mySQL/MariaDB due to ZFS not implementing `fallocate` properly
+
 ## Default console login credentials
 
 ```
