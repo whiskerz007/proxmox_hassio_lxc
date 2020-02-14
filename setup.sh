@@ -87,20 +87,29 @@ HASSIO_CLI=homeassistant/${ARCH}-hassio-cli
 HASSIO_CLI_PATH=/usr/sbin/hassio-cli
 docker pull $HASSIO_CLI >/dev/null
 cat << EOF > $HASSIO_CLI_PATH
-#!/bin/bash
-set -o errexit
+#!/usr/bin/env bash
 
-HASSIO_TOKEN=\$(jq --raw-output '.access_token' /usr/share/hassio/homeassistant.json)
+set -o errexit
+TMP=\$(mktemp) && trap "rm -f \$TMP" EXIT
+HASSIO_JSON=${HASSIO_PATH}/homeassistant.json
+if [ ! -f \${HASSIO_JSON} ]; then
+  echo "Missing '\$HASSIO_JSON', dropping to bash."
+  bash && exit
+fi
+jq --raw-output '.access_token' \${HASSIO_JSON} > \$TMP
 
 docker container run --rm -it --init \
   --security-opt apparmor="docker-default" \
-  -e HASSIO_TOKEN=\${HASSIO_TOKEN} \
+  -v \${TMP}:/etc/machine-id:ro \
   --network=hassio \
   --add-host hassio:172.30.32.2 \
   $HASSIO_CLI \
-  /bin/bash -c "sed -i '/HASSIO_TOKEN/ s/^/#/' /bin/cli.sh; /bin/cli.sh"
+  /bin/cli.sh || \
+( [ \$? -eq 10 ] && bash )
 EOF
 chmod +x $HASSIO_CLI_PATH
+usermod --shell $HASSIO_CLI_PATH root
+echo "cd ${HASSIO_PATH}" >> /root/.bashrc
 
 # Cleanup container
 msg "Cleanup..."
