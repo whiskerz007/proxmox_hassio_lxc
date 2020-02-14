@@ -76,7 +76,11 @@ while read -r line; do
   TAG=$(echo $line | awk '{print $1}')
   TYPE=$(echo $line | awk '{printf "%-10s", $2}')
   FREE=$(echo $line | numfmt --field 4-6 --from-unit=K --to=iec --format %.2f | awk '{printf( "%9sB", $6)}')
-  ITEM="  Type: $TYPE Free: $FREE"
+  ITEM="  Type: $TYPE Free: $FREE "
+  OFFSET=2
+  if [[ $((${#ITEM} + $OFFSET)) -gt ${MSG_MAX_LENGTH:-} ]]; then
+    MSG_MAX_LENGTH=$((${#ITEM} + $OFFSET))
+  fi
   STORAGE_MENU+=( "$TAG" "$ITEM" "OFF" )
 done < <(pvesm status -content rootdir | awk 'NR>1')
 if [ $((${#STORAGE_MENU[@]}/3)) -eq 0 ]; then
@@ -87,7 +91,8 @@ elif [ $((${#STORAGE_MENU[@]}/3)) -eq 1 ]; then
 else
   while [ -z "${STORAGE:+x}" ]; do
     STORAGE=$(whiptail --title "Storage Pools" --radiolist \
-    "Which storage pool you would like to use for the container?\n\n" 16 70 6 \
+    "Which storage pool you would like to use for the container?\n\n" \
+    16 $(($MSG_MAX_LENGTH + 23)) 6 \
     "${STORAGE_MENU[@]}" 3>&1 1>&2 2>&3) || exit
   done
 fi
