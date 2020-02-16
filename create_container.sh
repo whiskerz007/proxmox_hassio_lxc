@@ -130,7 +130,8 @@ ROOTFS=${STORAGE}:${DISK_REF-}${DISK}
 
 # Create LXC
 msg "Creating LXC container..."
-pvesm alloc $STORAGE $CTID $DISK 4G --format ${DISK_FORMAT:-raw} >/dev/null
+DISK_SIZE=4G
+pvesm alloc $STORAGE $CTID $DISK $DISK_SIZE --format ${DISK_FORMAT:-raw} >/dev/null
 if [ "$STORAGE_TYPE" == "zfspool" ]; then
   warn "Some addons may not work due to ZFS not supporting 'fallocate'."
 else
@@ -139,9 +140,10 @@ fi
 ARCH=$(dpkg --print-architecture)
 HOSTNAME=hassio
 TEMPLATE_STRING="local:vztmpl/${TEMPLATE}"
-pct create $CTID $TEMPLATE_STRING -arch $ARCH -cores 1 -features nesting=1 \
+pct create $CTID $TEMPLATE_STRING -arch $ARCH -features nesting=1 \
   -hostname $HOSTNAME -net0 name=eth0,bridge=vmbr0,ip=dhcp -onboot 1 \
-  -ostype $OSTYPE -password "hassio" -rootfs $ROOTFS -storage $STORAGE >/dev/null
+  -ostype $OSTYPE -password "hassio" -rootfs $ROOTFS,size=$DISK_SIZE \
+  -storage $STORAGE >/dev/null
 
 # Modify LXC permissions to support Docker
 LXC_CONFIG=/etc/pve/lxc/${CTID}.conf
