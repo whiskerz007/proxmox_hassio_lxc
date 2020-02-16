@@ -68,8 +68,12 @@ while [ -z "${CTID_TO:+x}" ]; do
 done
 
 # Verify container selections
-CTID_FROM_HOSTNAME=$(pct config $CTID_FROM | grep hostname | sed -n 's/.* \(.*\)/\1/p')
-CTID_TO_HOSTNAME=$(pct config $CTID_TO | grep hostname | sed -n 's/.* \(.*\)/\1/p')
+for i in ${!CTID_MENU[@]}; do
+  [ "${CTID_MENU[$i]}" == "$CTID_FROM" ] && \
+    CTID_FROM_HOSTNAME=$(sed 's/[[:space:]]*$//' <<<${CTID_MENU[$i+1]})
+  [ "${CTID_MENU[$i]}" == "$CTID_TO" ] && \
+    CTID_TO_HOSTNAME=$(sed 's/[[:space:]]*$//' <<<${CTID_MENU[$i+1]})
+done
 whiptail --defaultno --title "$TITLE" --yesno \
 "Are you sure you want to move data between the following containers?\n
 \n$CTID_FROM (${CTID_FROM_HOSTNAME}) -> $CTID_TO (${CTID_TO_HOSTNAME})" 12 50 || exit
