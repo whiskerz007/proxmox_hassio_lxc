@@ -67,6 +67,18 @@ while [ -z "${CTID_TO:+x}" ]; do
   "${CTID_MENU[@]}" 3>&1 1>&2 2>&3) || exit
 done
 
+# Selection menu for features to copy
+CTID_FEATURES=( $(
+  whiptail --title "$TITLE" --checklist \
+  "\nChoose features to copy to LXC '$CTID_TO'" 15 42 6 \
+  boot "Startup boot option " ON \
+  memory "Amount of memory " ON \
+  swap "Amount of swap " ON \
+  disk "Disk size " OFF \
+  hostname "Hostname " OFF \
+  net "Network settings " OFF 3>&1 1>&2 2>&3
+) ) || exit
+
 # Verify container selections
 for i in ${!CTID_MENU[@]}; do
   [ "${CTID_MENU[$i]}" == "$CTID_FROM" ] && \
@@ -75,8 +87,11 @@ for i in ${!CTID_MENU[@]}; do
     CTID_TO_HOSTNAME=$(sed 's/[[:space:]]*$//' <<<${CTID_MENU[$i+1]})
 done
 whiptail --defaultno --title "$TITLE" --yesno \
-"Are you sure you want to move data between the following containers?\n
-\n$CTID_FROM (${CTID_FROM_HOSTNAME}) -> $CTID_TO (${CTID_TO_HOSTNAME})" 12 50 || exit
+"Are you sure you want to move data between the following containers with specified features?
+
+
+$CTID_FROM (${CTID_FROM_HOSTNAME}) -> $CTID_TO (${CTID_TO_HOSTNAME})
+Features: ${CTID_FEATURES[*]//\"}" 13 50 || exit
 info "Home Assistant data from '$CTID_FROM' to '$CTID_TO'"
 
 # Shutdown container if running
@@ -84,6 +99,29 @@ if [ $(pct status $CTID_TO | sed 's/.* //') == 'running' ]; then
   msg "Shutting down '$CTID_TO'..."
   pct shutdown $CTID_TO
 fi
+
+# Set LXC features
+msg "Setting features..."
+for i in ${!CTID_FEATURES[@]}; do
+  case ${CTID_FEATURES[$i]//\"} in
+    boot)
+      FEATURES+=( "-$(pct config $CTID_FROM | sed -n '/^onboot/ s/://p')" );;
+    disk)
+      DISK_SIZE=$(pct config $CTID_FROM | sed -n '/^rootfs/ s/.*size=\(.*\).*/\1/p')
+      [ "$(pct config $CTID_TO | sed -n '/^rootfs/ s/.*size=\(.*\).*/\1/p')" != "$DISK_SIZE" ] && \
+        pct resize $CTID_TO rootfs $DISK_SIZE >/dev/null
+      ;;
+    hostname)
+      FEATURES+=( "-$(pct config $CTID_FROM | sed -n '/^hostname/ s/://p')" );;
+    memory)
+      FEATURES+=( "-$(pct config $CTID_FROM | sed -n '/^memory/ s/://p')" );;
+    net)
+      FEATURES+=( "-$(pct config $CTID_FROM | sed -n '/^net/ s/://p')" );;
+    swap)
+      FEATURES+=( "-$(pct config $CTID_FROM | sed -n '/^swap/ s/://p')" );;
+  esac
+done
+pct set $CTID_TO ${FEATURES[*]}
 
 # Mount container disks
 msg "Mounting container disks..."
