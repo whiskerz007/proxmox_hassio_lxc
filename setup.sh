@@ -111,6 +111,21 @@ chmod +x $HASSIO_CLI_PATH
 usermod --shell $HASSIO_CLI_PATH root
 echo "cd ${HASSIO_PATH}" >> /root/.bashrc
 
+# Customize container
+msg "Customizing container..."
+rm /etc/motd # Remove message of the day after login
+rm /etc/update-motd.d/10-uname # Remove kernel information after login
+touch ~/.hushlogin # Remove 'Last login: ' and mail notification after login
+GETTY_OVERRIDE="/etc/systemd/system/container-getty@1.service.d/override.conf"
+mkdir -p $(dirname $GETTY_OVERRIDE)
+cat << EOF > $GETTY_OVERRIDE
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin root --noclear --keep-baud tty%I 115200,38400,9600 \$TERM
+EOF
+systemctl daemon-reload
+systemctl restart $(basename $(dirname $GETTY_OVERRIDE) | sed 's/\.d//')
+
 # Cleanup container
 msg "Cleanup..."
 rm -rf /setup.sh /var/{cache,log}/* /var/lib/apt/lists/*

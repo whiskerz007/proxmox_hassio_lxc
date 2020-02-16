@@ -25,9 +25,6 @@ bash -c "$(wget -qLO - https://github.com/whiskerz007/proxmox_hassio_lxc/raw/mas
 - Unable to use bluetooth devices due to the limitation of LXC
 - Setting up container on a ZFS pool will cause issues with addons that use mySQL/MariaDB due to ZFS not implementing `fallocate` properly
 
-## Default console login credentials
+## Console
 
-```
-Username: root
-Password: hassio
-```
+There is no login required to access the console from the Proxmox web UI. If you are presented with a blank screen, press `CTRL + C` to generate a prompt.
