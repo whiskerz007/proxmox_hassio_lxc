@@ -12,6 +12,16 @@ To create a new LXC container on Proxmox and setup Home Assistant to run inside 
 bash -c "$(wget -qLO - https://github.com/whiskerz007/proxmox_hassio_lxc/raw/master/create_container.sh)"
 ```
 
+## Update device hooks
+
+To update the list of devices that are shared with the LXC ID of `100`, run the following in a SSH connection or the Proxmox web shell.
+
+```
+bash -c "$(wget -qLO - https://github.com/whiskerz007/proxmox_hassio_lxc/raw/master/set_autodev_hook.sh)" -s 100
+```
+
+***Note:*** _The changes will apply on the next start of LXC._
+
 ## Copy data between containers
 
 To ease the process of updating the LXC configuration, a script has been provided. To copy Home Assistant data from one container to another, run the following in a SSH connection or the Proxmox web shell.
