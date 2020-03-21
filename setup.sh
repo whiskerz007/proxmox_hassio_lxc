@@ -8,7 +8,7 @@ set -o pipefail #Pipe will exit with last non-zero status if applicable
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-trap 'tput cub 2;die "Script interrupted."' INT
+trap 'die "Script interrupted."' INT
 
 function error_exit() {
   trap - ERR
