@@ -57,17 +57,17 @@ cat >/etc/docker/daemon.json <<'EOF'
 EOF
 systemctl restart docker
 
-# Install Hass.io
-msg "Installing Hass.io..."
+# Install Home Assistant
+msg "Installing Home Assistant..."
 bash <(curl -sL https://github.com/home-assistant/hassio-installer/raw/master/hassio_install.sh) &>/dev/null
 
-# Fix for Hass.io Supervisor btime check
+# Fix for Home Assistant Supervisor btime check
 HASSIO_PATH=$(jq --raw-output '.data' /etc/hassio.json)
 SYSTEMD_SERVICE_PATH=/etc/systemd/system
 mkdir -p ${SYSTEMD_SERVICE_PATH}/hassio-supervisor.service.wants
 cat << EOF > ${SYSTEMD_SERVICE_PATH}/hassio-fix-btime.service
 [Unit]
-Description=Removal of Hass.io last_boot parameter from config.json
+Description=Removal of Home Assistant last_boot parameter from config.json
 Before=hassio-supervisor.service
 
 [Service]

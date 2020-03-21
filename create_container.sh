@@ -138,12 +138,11 @@ else
   mkfs.ext4 $(pvesm path $ROOTFS) &>/dev/null
 fi
 ARCH=$(dpkg --print-architecture)
-HOSTNAME=hassio
+HOSTNAME=homeassistant
 TEMPLATE_STRING="local:vztmpl/${TEMPLATE}"
 pct create $CTID $TEMPLATE_STRING -arch $ARCH -features nesting=1 \
   -hostname $HOSTNAME -net0 name=eth0,bridge=vmbr0,ip=dhcp -onboot 1 \
-  -ostype $OSTYPE -password "hassio" -rootfs $ROOTFS,size=$DISK_SIZE \
-  -storage $STORAGE >/dev/null
+  -ostype $OSTYPE -rootfs $ROOTFS,size=$DISK_SIZE -storage $STORAGE >/dev/null
 
 # Modify LXC permissions to support Docker
 LXC_CONFIG=/etc/pve/lxc/${CTID}.conf
@@ -163,7 +162,7 @@ MOUNT=$(pct mount $CTID | cut -d"'" -f 2)
 ln -fs $(readlink /etc/localtime) ${MOUNT}/etc/localtime
 pct unmount $CTID && unset MOUNT
 
-# Setup container for Hass.io
+# Setup container for Home Assistant
 msg "Starting LXC container..."
 pct start $CTID
 pct push $CTID setup.sh /setup.sh -perms 755
@@ -171,10 +170,10 @@ pct exec $CTID /setup.sh
 
 # Get network details and show completion message
 IP=$(pct exec $CTID ip a s dev eth0 | sed -n '/inet / s/\// /p' | awk '{print $2}')
-info "Successfully created Hass.io LXC to $CTID."
+info "Successfully created Home Assistant LXC to $CTID."
 msg "
 
-Hass.io is reachable by going to the following URLs.
+Home Assistant is reachable by going to the following URLs.
 
       http://${IP}:8123
       http://${HOSTNAME}.local:8123
