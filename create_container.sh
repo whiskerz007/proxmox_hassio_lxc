@@ -152,7 +152,7 @@ lxc.cap.drop:
 EOF
 
 # Set autodev hook to enable access to devices in container
-./set_autodev_hook.sh $CTID
+bash ./set_autodev_hook.sh $CTID
 
 # Set container timezone to match host
 MOUNT=$(pct mount $CTID | cut -d"'" -f 2)
