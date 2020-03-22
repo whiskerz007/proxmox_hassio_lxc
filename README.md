@@ -34,6 +34,7 @@ bash -c "$(wget -qLO - https://github.com/whiskerz007/proxmox_hassio_lxc/raw/mas
 
 - Unable to use bluetooth devices due to the limitation of LXC
 - Setting up container on a ZFS pool will cause issues with addons that use mySQL/MariaDB due to ZFS not implementing `fallocate` properly
+- WireGuard addon might generate a warning for `IP forwarding` being disabled. To enable this feature you'll need to add `post-up echo 1 > /proc/sys/net/ipv4/ip_forward` to `/etc/network/interfaces` under Proxmox, then reboot Proxmox. [[Link](https://pve.proxmox.com/wiki/Network_Configuration#_masquerading_nat_with_tt_span_class_monospaced_iptables_span_tt)] 
 
 ## Console
 
