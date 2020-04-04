@@ -28,7 +28,6 @@ msg "Setting up container OS..."
 sed -i "/$LANG/ s/\(^# \)//" /etc/locale.gen
 locale-gen >/dev/null
 apt-get -y purge openssh-{client,server} >/dev/null
-apt-get autoremove >/dev/null
 
 # Update container OS
 msg "Updating container OS..."
@@ -121,4 +120,5 @@ systemctl restart $(basename $(dirname $GETTY_OVERRIDE) | sed 's/\.d//')
 
 # Cleanup container
 msg "Cleanup..."
+apt-get autoremove >/dev/null
 rm -rf /setup.sh /var/{cache,log}/* /var/lib/apt/lists/*
