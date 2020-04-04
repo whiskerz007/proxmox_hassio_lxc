@@ -60,10 +60,10 @@ systemctl restart docker
 
 # Install Home Assistant
 msg "Installing Home Assistant..."
-bash <(curl -sL https://github.com/home-assistant/hassio-installer/raw/master/hassio_install.sh) &>/dev/null
+bash <(curl -sL https://github.com/home-assistant/supervised-installer/raw/master/installer.sh) &>/dev/null
 
 # Fix for Home Assistant Supervisor btime check
-HASSIO_PATH=$(jq --raw-output '.data' /etc/hassio.json)
+HA_PATH=$(jq --raw-output '.data' /etc/hassio.json)
 SYSTEMD_SERVICE_PATH=/etc/systemd/system
 mkdir -p ${SYSTEMD_SERVICE_PATH}/hassio-supervisor.service.wants
 cat << EOF > ${SYSTEMD_SERVICE_PATH}/hassio-fix-btime.service
@@ -73,7 +73,7 @@ Before=hassio-supervisor.service
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c 'sed -i -e "/last_boot/\x20s/\x5c\x22\x5c\x28\x5b0\x2d9\x5d.\x2a\x5c\x29\x5c\x22/\x5c\x22\x5c\x22/" ${HASSIO_PATH}/config.json'
+ExecStart=/bin/bash -c 'sed -i -e "/last_boot/\x20s/\x5c\x22\x5c\x28\x5b0\x2d9\x5d.\x2a\x5c\x29\x5c\x22/\x5c\x22\x5c\x22/" ${HA_PATH}/config.json'
 RemainAfterExit=yes
 
 [Install]
@@ -81,36 +81,32 @@ WantedBy=multi-user.target
 EOF
 ln -s ${SYSTEMD_SERVICE_PATH}/{hassio-fix-btime.service,hassio-supervisor.service.wants/}
 
-# Install hassio-cli
-msg "Installing hassio-cli..."
-ARCH=$(dpkg --print-architecture)
-HASSIO_CLI=homeassistant/${ARCH}-hassio-cli
-HASSIO_CLI_PATH=/usr/sbin/hassio-cli
-docker pull $HASSIO_CLI >/dev/null
-cat << EOF > $HASSIO_CLI_PATH
+# Run Home Assistant cli when root login
+msg "Enabling autorun Home Assistant cli..."
+HA_CLI_PATH=/usr/sbin/ha-cli
+cat << EOF > $HA_CLI_PATH
 #!/usr/bin/env bash
 
 set -o errexit
-TMP=\$(mktemp) && trap "rm -f \$TMP" EXIT
-HASSIO_JSON=${HASSIO_PATH}/homeassistant.json
-if [ ! -f \${HASSIO_JSON} ]; then
-  echo "Missing '\$HASSIO_JSON', dropping to bash."
+HA_JSON=${HA_PATH}/homeassistant.json
+if [ ! -f \${HA_JSON} ]; then
+  echo "Missing '\$HA_JSON', dropping to bash."
   bash && exit
 fi
-jq --raw-output '.access_token' \${HASSIO_JSON} > \$TMP
+HA_CLI=hassio_cli
+HA_CLI_RUNNING=\$(docker inspect -f '{{.State.Running}}' \$HA_CLI)
+if [ ! "\${HA_CLI_RUNNING}" = "true" ]; then
+  echo "'\$HA_CLI' is not running, dropping to bash."
+  bash && exit
+fi
 
-docker container run --rm -it --init \
-  --security-opt apparmor="docker-default" \
-  -v \${TMP}:/etc/machine-id:ro \
-  --network=hassio \
-  --add-host hassio:172.30.32.2 \
-  $HASSIO_CLI \
-  /bin/cli.sh || \
+docker exec -it hassio_cli \
+  cli.sh || \
 ( [ \$? -eq 10 ] && bash )
 EOF
-chmod +x $HASSIO_CLI_PATH
-usermod --shell $HASSIO_CLI_PATH root
-echo "cd ${HASSIO_PATH}" >> /root/.bashrc
+chmod +x $HA_CLI_PATH
+usermod --shell $HA_CLI_PATH root
+echo "cd ${HA_PATH}" >> /root/.bashrc
 
 # Customize container
 msg "Customizing container..."
