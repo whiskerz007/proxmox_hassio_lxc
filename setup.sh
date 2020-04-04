@@ -40,23 +40,19 @@ msg "Installing prerequisites..."
 apt-get -qqy install \
     avahi-daemon curl jq network-manager &>/dev/null
 
+# Customize Docker configuration
+msg "Customizing Docker..."
+DOCKER_CONFIG_PATH='/etc/docker/daemon.json'
+mkdir -p $(dirname $DOCKER_CONFIG_PATH)
+cat >$DOCKER_CONFIG_PATH <<'EOF'
+{
+  "log-driver": "journald"
+}
+EOF
+
 # Install Docker
 msg "Installing Docker..."
 sh <(curl -sSL https://get.docker.com) &>/dev/null
-
-# Customize Docker configuration
-msg "Customizing Docker..."
-# Set limit to Docker container log size
-cat >/etc/docker/daemon.json <<'EOF'
-{
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "3" 
-  }
-}
-EOF
-systemctl restart docker
 
 # Install Home Assistant
 msg "Installing Home Assistant..."
