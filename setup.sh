@@ -78,7 +78,7 @@ ln -s ${SYSTEMD_SERVICE_PATH}/{hassio-fix-btime.service,hassio-supervisor.servic
 
 # Run Home Assistant cli when root login
 msg "Enabling autorun Home Assistant cli..."
-HA_CLI_PATH=/usr/sbin/ha-cli
+HA_CLI_PATH=/usr/bin/ha-cli
 cat << EOF > $HA_CLI_PATH
 #!/usr/bin/env bash
 
