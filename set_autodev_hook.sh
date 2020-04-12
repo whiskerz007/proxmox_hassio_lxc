@@ -34,11 +34,12 @@ pushd $TEMP_DIR >/dev/null
 CHAR_DEVS+=("1:1") #mem (physical memory access)
 CHAR_DEVS+=("4:\([3-9]\|[1-5][0-9]\|6[0-3]\)") #tty* (virtual console, minor 3-63)
 CHAR_DEVS+=("4:\(6[4-9]\|[7-9][0-9]\|1[0-9][0-9]\|2[0-4][0-9]\|25[0-5]\)") #ttyS* (UART serial port, minor 64-255)
+CHAR_DEVS+=("10:200") #net/tun (TAP/TUN network device)
 CHAR_DEVS+=("166:.*") #ttyACM* (ACM USB modems)
 CHAR_DEVS+=("180:\([0-9]\|1[0-5]\)") #usb/hiddev* (UPS devices, minor 0-15)
 CHAR_DEVS+=("188:.*") #ttyUSB* (USB serial converters)
 CHAR_DEVS+=("189:.*") #bus/usb/* (USB serial converters - alternate devices)
-CHAR_DEVS+=("10:200") #net/tun (TAP/TUN network device)
+CHAR_DEVS+=("241:.*") #hidraw* (Wyze Sense bridge)
 
 # Proccess char device string
 for char_dev in ${CHAR_DEVS[@]}; do
