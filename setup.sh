@@ -55,7 +55,7 @@ sh <(curl -sSL https://get.docker.com) &>/dev/null
 
 # Install Home Assistant
 msg "Installing Home Assistant..."
-bash <(curl -sL https://github.com/home-assistant/supervised-installer/raw/master/installer.sh) &>/dev/null
+bash <(curl -sL https://raw.githubusercontent.com/home-assistant/supervised-installer/c674830d8ddc6af9d618755a7995af939dd73fde/installer.sh) &>/dev/null
 
 # Fix for Home Assistant Supervisor btime check
 HA_PATH=$(jq --raw-output '.data' /etc/hassio.json)
