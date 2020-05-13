@@ -55,9 +55,9 @@ for char_dev in \$(find /sys/dev/char -regextype sed $CHAR_DEV_STRING); do
   mkdir -p \$(dirname \${LXC_ROOTFS_MOUNT}\${dev});
   for link in \$(udevadm info --query=property \$dev | sed -n "s/DEVLINKS=//p"); do
     mkdir -p \${LXC_ROOTFS_MOUNT}\$(dirname \$link);
-    cp -dR \$link \${LXC_ROOTFS_MOUNT}\${link};
+    cp -dpR \$link \${LXC_ROOTFS_MOUNT}\${link};
   done;
-  cp -dR \$dev \${LXC_ROOTFS_MOUNT}\${dev};
+  cp -dpR \$dev \${LXC_ROOTFS_MOUNT}\${dev};
 done;
 EOF
 HOOK_SCRIPT=${HOOK_SCRIPT//$'\n'/} #Remove newline char from variable
