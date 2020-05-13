@@ -99,4 +99,5 @@ touch ~/.hushlogin # Remove 'Last login: ' and mail notification after login
 # Cleanup container
 msg "Cleanup..."
 apt-get autoremove >/dev/null
+apt-get autoclean >/dev/null
 rm -rf /setup /var/{cache,log}/* /var/lib/apt/lists/*
