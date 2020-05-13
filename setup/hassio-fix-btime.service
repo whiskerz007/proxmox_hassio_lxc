@@ -1,0 +1,11 @@
+[Unit]
+Description=Removal of Home Assistant last_boot parameter from config.json
+Before=hassio-supervisor.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'sed -i -e "/last_boot/\x20s/\x5c\x22\x5c\x28\x5b0\x2d9\x5d.\x2a\x5c\x29\x5c\x22/\x5c\x22\x5c\x22/" ${HA_PATH}/config.json'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

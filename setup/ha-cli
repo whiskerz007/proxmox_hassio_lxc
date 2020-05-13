@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -o errexit
+
+HA_CLI=hassio_cli
+HA_PATH=$(jq --raw-output '.data' /etc/hassio.json)
+HA_JSON=${HA_PATH}/homeassistant.json
+
+if [ ! -f ${HA_JSON} ]; then
+  echo "Missing '$HA_JSON', dropping to bash."
+  bash && exit
+fi
+if ! systemctl is-active --quiet docker &>/dev/null; then
+  echo "Docker is not running yet, dropping to bash."
+  bash && exit
+fi
+HA_CLI_RUNNING=$(docker inspect -f '{{.State.Running}}' $HA_CLI)
+if [ ! "${HA_CLI_RUNNING}" = "true" ]; then
+  echo "'$HA_CLI' is not running, dropping to bash."
+  bash && exit
+fi
+
+docker exec -it hassio_cli \
+  cli.sh || \
+( [ $? -eq 10 ] && echo "" && bash )

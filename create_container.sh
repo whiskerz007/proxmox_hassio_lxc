@@ -164,7 +164,12 @@ pct unmount $CTID && unset MOUNT
 msg "Starting LXC container..."
 pct start $CTID
 pct exec $CTID mkdir /setup
-pct push $CTID setup/setup.sh /setup/setup.sh -perms 755
+for file in $(find setup/); do
+  if [[ $file == *.service ]]; then
+    PERMISSIONS=644
+  fi
+  pct push $CTID $file /setup/$(basename $file) -perms ${PERMISSIONS:-755}
+done
 pct exec $CTID /setup/setup.sh
 
 # Get network details and show completion message

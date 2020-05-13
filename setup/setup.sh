@@ -53,52 +53,39 @@ EOF
 msg "Installing Docker..."
 sh <(curl -sSL https://get.docker.com) &>/dev/null
 
-# Install Home Assistant
-msg "Installing Home Assistant..."
-bash <(curl -sL https://github.com/home-assistant/supervised-installer/raw/master/installer.sh) &>/dev/null
+# Install Home Assistant Supervisor
+msg "Installing Home Assistant Supervisor..."
+HASSIO_DOCKER=homeassistant/amd64-hassio-supervisor
+HASSIO_SERVICE=hassio-supervisor.service
+HASSIO_VERSION=$(curl -s https://version.home-assistant.io/stable.json | jq -e -r '.supervisor')
+SYSTEMD_SERVICE_PATH=/etc/systemd/system
+cat > /etc/hassio.json <<- EOF
+{
+    "supervisor": "${HASSIO_DOCKER}",
+    "homeassistant": "homeassistant/qemux86-64-homeassistant",
+    "data": "/usr/share/hassio"
+}
+EOF
+docker pull "$HASSIO_DOCKER:$HASSIO_VERSION" > /dev/null
+docker tag "$HASSIO_DOCKER:$HASSIO_VERSION" "$HASSIO_DOCKER:latest" > /dev/null
+mv /setup/hassio-supervisor /usr/sbin/
+mv /setup/$HASSIO_SERVICE $SYSTEMD_SERVICE_PATH
 
 # Fix for Home Assistant Supervisor btime check
 HA_PATH=$(jq --raw-output '.data' /etc/hassio.json)
-SYSTEMD_SERVICE_PATH=/etc/systemd/system
-mkdir -p ${SYSTEMD_SERVICE_PATH}/hassio-supervisor.service.wants
-cat << EOF > ${SYSTEMD_SERVICE_PATH}/hassio-fix-btime.service
-[Unit]
-Description=Removal of Home Assistant last_boot parameter from config.json
-Before=hassio-supervisor.service
-
-[Service]
-Type=oneshot
-ExecStart=/bin/bash -c 'sed -i -e "/last_boot/\x20s/\x5c\x22\x5c\x28\x5b0\x2d9\x5d.\x2a\x5c\x29\x5c\x22/\x5c\x22\x5c\x22/" ${HA_PATH}/config.json'
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
+mkdir -p ${SYSTEMD_SERVICE_PATH}/${HASSIO_SERVICE}.wants
+mv /setup/hassio-fix-btime.service $SYSTEMD_SERVICE_PATH
 ln -s ${SYSTEMD_SERVICE_PATH}/{hassio-fix-btime.service,hassio-supervisor.service.wants/}
 
+# Start Home Assistant Supervisor service
+msg "Starting Home Assistant Supervisor..."
+systemctl daemon-reload
+systemctl enable --now $HASSIO_SERVICE &> /dev/null
+
 # Run Home Assistant cli when root login
-msg "Enabling autorun Home Assistant cli..."
-HA_CLI_PATH=/usr/bin/ha-cli
-cat << EOF > $HA_CLI_PATH
-#!/usr/bin/env bash
-
-set -o errexit
-HA_JSON=${HA_PATH}/homeassistant.json
-if [ ! -f \${HA_JSON} ]; then
-  echo "Missing '\$HA_JSON', dropping to bash."
-  bash && exit
-fi
-HA_CLI=hassio_cli
-HA_CLI_RUNNING=\$(docker inspect -f '{{.State.Running}}' \$HA_CLI)
-if [ ! "\${HA_CLI_RUNNING}" = "true" ]; then
-  echo "'\$HA_CLI' is not running, dropping to bash."
-  bash && exit
-fi
-
-docker exec -it hassio_cli \
-  cli.sh || \
-( [ \$? -eq 10 ] && bash )
-EOF
+msg "Changing 'root' shell to Home Assistant cli..."
+HA_CLI_PATH=/usr/sbin/ha-cli
+mv /setup/{ha,$(basename $HA_CLI_PATH)} $(dirname $HA_CLI_PATH)
 chmod +x $HA_CLI_PATH
 usermod --shell $HA_CLI_PATH root
 echo "cd ${HA_PATH}" >> /root/.bashrc
