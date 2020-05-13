@@ -121,4 +121,4 @@ systemctl restart $(basename $(dirname $GETTY_OVERRIDE) | sed 's/\.d//')
 # Cleanup container
 msg "Cleanup..."
 apt-get autoremove >/dev/null
-rm -rf /setup.sh /var/{cache,log}/* /var/lib/apt/lists/*
+rm -rf /setup /var/{cache,log}/* /var/lib/apt/lists/*

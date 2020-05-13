@@ -65,7 +65,8 @@ TEMP_DIR=$(mktemp -d)
 pushd $TEMP_DIR >/dev/null
 
 # Download setup script
-wget -qL https://github.com/whiskerz007/proxmox_hassio_lxc/raw/master/{setup,set_autodev_hook}.sh
+REPO="https://github.com/whiskerz007/proxmox_hassio_lxc"
+wget -qO - ${REPO}/tarball/master | tar -xz --strip-components=1
 
 # Detect modules and automatically load at boot
 load_module aufs
@@ -162,8 +163,9 @@ pct unmount $CTID && unset MOUNT
 # Setup container for Home Assistant
 msg "Starting LXC container..."
 pct start $CTID
-pct push $CTID setup.sh /setup.sh -perms 755
-pct exec $CTID /setup.sh
+pct exec $CTID mkdir /setup
+pct push $CTID setup/setup.sh /setup/setup.sh -perms 755
+pct exec $CTID /setup/setup.sh
 
 # Get network details and show completion message
 IP=$(pct exec $CTID ip a s dev eth0 | sed -n '/inet / s/\// /p' | awk '{print $2}')
