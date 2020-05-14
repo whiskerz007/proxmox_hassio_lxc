@@ -158,7 +158,19 @@ fi
 
 # Copy data between containers
 msg "Copying data between containers..."
-rsync -aqHSX ${CTID_FROM_PATH}${HA_PATH} $(dirname ${CTID_TO_PATH}${HA_PATH})
-rsync -aqHSX ${CTID_FROM_PATH}${DOCKER_PATH} $(dirname ${CTID_TO_PATH}${DOCKER_PATH})
+RSYNC_OPTIONS=(
+  --archive
+  --hard-links
+  --sparse
+  --xattrs
+  --no-inc-recursive
+  --info=progress2
+)
+msg "<==== Home Assistant Data ====>"
+rsync ${RSYNC_OPTIONS[*]} ${CTID_FROM_PATH}${HA_PATH} $(dirname ${CTID_TO_PATH}${HA_PATH})
+echo -en "\e[1A\e[0K\e[1A\e[0K"
+msg "<======== Docker Data ========>"
+rsync ${RSYNC_OPTIONS[*]} ${CTID_FROM_PATH}${DOCKER_PATH} $(dirname ${CTID_TO_PATH}${DOCKER_PATH})
+echo -en "\e[1A\e[0K\e[1A\e[0K"
 
 info "Successfully transferred data."
