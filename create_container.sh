@@ -169,6 +169,7 @@ for file in $(find setup/); do
     PERMISSIONS=644
   fi
   pct push $CTID $file /setup/$(basename $file) -perms ${PERMISSIONS:-755}
+  unset PERMISSIONS
 done
 pct exec $CTID /setup/setup.sh
 
