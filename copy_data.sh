@@ -101,15 +101,16 @@ if [ $(pct status $CTID_TO | sed 's/.* //') == 'running' ]; then
 fi
 
 # Set LXC features
-msg "Setting features..."
 for i in ${!CTID_FEATURES[@]}; do
   case ${CTID_FEATURES[$i]//\"} in
     boot)
       FEATURES+=( "-$(pct config $CTID_FROM | sed -n '/^onboot/ s/://p')" );;
     disk)
       DISK_SIZE=$(pct config $CTID_FROM | sed -n '/^rootfs/ s/.*size=\(.*\).*/\1/p')
-      [ "$(pct config $CTID_TO | sed -n '/^rootfs/ s/.*size=\(.*\).*/\1/p')" != "$DISK_SIZE" ] && \
+      if [ "$(pct config $CTID_TO | sed -n '/^rootfs/ s/.*size=\(.*\).*/\1/p')" != "$DISK_SIZE" ]; then
+        msg "Resizing disk..."
         pct resize $CTID_TO rootfs $DISK_SIZE >/dev/null
+      fi
       ;;
     hostname)
       FEATURES+=( "-$(pct config $CTID_FROM | sed -n '/^hostname/ s/://p')" );;
@@ -121,7 +122,10 @@ for i in ${!CTID_FEATURES[@]}; do
       FEATURES+=( "-$(pct config $CTID_FROM | sed -n '/^swap/ s/://p')" );;
   esac
 done
-pct set $CTID_TO ${FEATURES[*]}
+if [[ ! -z "${!FEATURES[@]}" ]]; then
+  msg "Setting features..."
+  pct set $CTID_TO ${FEATURES[*]}
+fi
 
 # Mount container disks
 msg "Mounting container disks..."
