@@ -96,8 +96,8 @@ info "Home Assistant data from '$CTID_FROM' to '$CTID_TO'"
 
 # Shutdown container if running
 if [ $(pct status $CTID_TO | sed 's/.* //') == 'running' ]; then
-  msg "Shutting down '$CTID_TO'..."
-  pct shutdown $CTID_TO
+  msg "Stopping '$CTID_TO'..."
+  pct stop $CTID_TO
 fi
 
 # Set LXC features
