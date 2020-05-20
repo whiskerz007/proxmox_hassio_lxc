@@ -50,27 +50,12 @@ function cleanup() {
   popd >/dev/null
   rm -rf $TEMP_DIR
 }
-function load_module() {
-  if ! $(lsmod | grep -Fq $1); then
-    modprobe $1 &>/dev/null || \
-      die "Failed to load '$1' module."
-  fi
-  MODULES_PATH=/etc/modules
-  if ! $(grep -Fxq "$1" $MODULES_PATH); then
-    echo "$1" >> $MODULES_PATH || \
-      die "Failed to add '$1' module to load at boot."
-  fi
-}
 TEMP_DIR=$(mktemp -d)
 pushd $TEMP_DIR >/dev/null
 
 # Download setup script
 REPO="https://github.com/whiskerz007/proxmox_hassio_lxc"
 wget -qO - ${REPO}/tarball/master | tar -xz --strip-components=1
-
-# Detect modules and automatically load at boot
-load_module aufs
-load_module overlay
 
 # Select storage location
 while read -r line; do
@@ -150,6 +135,11 @@ LXC_CONFIG=/etc/pve/lxc/${CTID}.conf
 cat <<EOF >> $LXC_CONFIG
 lxc.cgroup.devices.allow: a
 lxc.cap.drop:
+EOF
+
+# Load modules for Docker before starting LXC
+cat << 'EOF' >> $LXC_CONFIG
+lxc.hook.pre-start: sh -ec 'for module in aufs overlay; do modinfo $module; $(lsmod | grep -Fq $module) || modprobe $module; done;'
 EOF
 
 # Set autodev hook to enable access to devices in container
