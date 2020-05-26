@@ -40,7 +40,7 @@ CHAR_DEVS+=("166:.*") #ttyACM* (ACM USB modems)
 CHAR_DEVS+=("180:\([0-9]\|1[0-5]\)") #usb/hiddev* (UPS devices, minor 0-15)
 CHAR_DEVS+=("188:.*") #ttyUSB* (USB serial converters)
 CHAR_DEVS+=("189:.*") #bus/usb/* (USB serial converters - alternate devices)
-CHAR_DEVS+=("241:.*") #hidraw* (Wyze Sense bridge)
+CHAR_DEVS+=("24[0-2]:.*") #hidraw* (Wyze Sense bridge)
 
 # Proccess char device string
 for char_dev in ${CHAR_DEVS[@]}; do
