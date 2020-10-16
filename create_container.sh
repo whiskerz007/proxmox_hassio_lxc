@@ -34,9 +34,6 @@ function msg() {
   echo -e "$TEXT"
 }
 function cleanup_ctid() {
-  if [ ! -z ${MOUNT+x} ]; then
-    pct unmount $CTID
-  fi
   if $(pct status $CTID &>/dev/null); then
     if [ "$(pct status $CTID | awk '{print $2}')" == "running" ]; then
       pct stop $CTID
@@ -146,9 +143,9 @@ EOF
 bash ./set_autodev_hook.sh $CTID
 
 # Set container timezone to match host
-MOUNT=$(pct mount $CTID | cut -d"'" -f 2)
-ln -fs $(readlink /etc/localtime) ${MOUNT}/etc/localtime
-pct unmount $CTID && unset MOUNT
+cat << 'EOF' >> $LXC_CONFIG
+lxc.hook.mount: sh -c 'ln -fs $(readlink /etc/localtime) ${LXC_ROOTFS_MOUNT}/etc/localtime'
+EOF
 
 # Setup container for Home Assistant
 msg "Starting LXC container..."
