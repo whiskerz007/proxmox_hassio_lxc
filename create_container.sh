@@ -268,8 +268,10 @@ lxc-cmd apt-get autoclean >/dev/null
 lxc-cmd rm -rf /var/{cache,log}/* /var/lib/apt/lists/*
 ### Finish LXC commands ###
 
-# Get network details and show completion message
+# Get network details
 IP=$(pct exec $CTID ip a s dev eth0 | sed -n '/inet / s/\// /p' | awk '{print $2}')
+
+# Show completion message
 info "Successfully created Home Assistant LXC to $CTID."
 msg "
 
