@@ -256,6 +256,7 @@ msg "Configuring 'ha' cli prompt..."
 HA_CLI_PATH=/usr/sbin/hassio-cli
 lxc-cmd wget -qLO $HA_CLI_PATH https://github.com/home-assistant/operating-system/raw/dev/buildroot-external/rootfs-overlay/usr/sbin/hassos-cli
 lxc-cmd sed -i 's,/bin/ash,/bin/bash,g' $HA_CLI_PATH
+lxc-cmd sed -i '/# Run CLI container/,/^fi/d' $HA_CLI_PATH
 lxc-cmd sed -i 's,^\(mesg n.*\)$,# \1,' /root/.profile
 lxc-cmd chmod a+x $HA_CLI_PATH
 lxc-cmd usermod --shell $HA_CLI_PATH root
